@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astral Hero Tarot - Индивидуальный Оракул</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c7a87b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Astral Tarot">
+    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f14;
+            --fg: #eae6df;
+            --muted: #c9c3b8;
+            --accent: #c7a87b;
+            --card-bg: #16161d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            font-family: "Cormorant Garamond", "Georgia", serif;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Page Management */
+        .page {
+            display: none;
+            min-height: 100vh;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        /* Page 1 - Start Page */
+        #page1 {
+            position: relative;
+        }
+
+        .start-content {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        .oracle-button {
+            background: linear-gradient(135deg, var(--accent), #d4b885);
+            color: var(--bg);
+            border: none;
+            padding: 20px 50px;
+            font-size: 26px;
+            font-weight: 700;
+            border-radius: 35px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(199, 168, 123, 0.4), 0 0 30px rgba(199, 168, 123, 0.3);
+            font-family: "Cinzel", serif;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            max-width: 320px;
+        }
+
+        .oracle-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(199, 168, 123, 0.5);
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--muted);
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        /* Stars Animation - Circular Layout */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+            animation: twinkleCircle 3s ease-in-out infinite;
+        }
+
+        @keyframes twinkleCircle {
+            0%, 100% { 
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.3);
+            }
+        }
+
+        .stars-container.rotating .star {
+            animation: rotateCounterClockwise 4s linear forwards, twinkleCircle 3s ease-in-out infinite;
+        }
+
+        @keyframes rotateCounterClockwise {
+            from {
+                transform: rotate(0deg) translateX(150px) rotate(0deg);
+            }
+            to {
+                transform: rotate(-360deg) translateX(150px) rotate(360deg);
+            }
+        }
+
+        /* Page 2 - Title Page */
+        #page2 {
+            position: relative;
+        }
+
+        .hero-title {
+            font-family: "Cinzel", serif;
+            font-size: 4rem;
+            color: var(--accent);
+            text-align: center;
+            letter-spacing: 3px;
+            text-shadow: 0 0 30px rgba(199, 168, 123, 0.8),
+                         0 0 60px rgba(199, 168, 123, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 0.8; 
+                transform: scale(1);
+                text-shadow: 0 0 30px rgba(199, 168, 123, 0.8),
+                             0 0 60px rgba(199, 168, 123, 0.5);
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.05);
+                text-shadow: 0 0 40px rgba(199, 168, 123, 1),
+                             0 0 80px rgba(199, 168, 123, 0.7),
+                             0 0 120px rgba(199, 168, 123, 0.4);
+            }
+        }
+
+        /* Card Shuffle Animation */
+        .shuffle-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .shuffle-card {
+            position: absolute;
+            width: 80px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--card-bg), #1a1a22);
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Page 3 - Oracle Page */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-family: "Cinzel", "Georgia", serif;
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--muted);
+            margin-bottom: 30px;
+        }
+
+        /* Fade animations */
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInScale {
+            from { 
+                opacity: 0; 
+                transform: scale(0.8);
+            }
+            to { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+        }
+
+        .fade-out {
+            animation: fadeOut 1s ease forwards;
+        }
+
+        .fade-in {
+            animation: fadeIn 1.5s ease forwards;
+        }
+
+        .fade-in-scale {
+            animation: fadeInScale 1.5s ease forwards;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .cards-section {
+            display: none;
+            margin-top: 40px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+        }
+
+        .card-cell {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid rgba(199, 168, 123, 0.25);
+            border-radius: 12px;
+            padding: 10px;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            transform-style: preserve-3d;
+        }
+        
+        .card-cell.enlarged {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) !important;
+            z-index: 9999;
+            width: 500px;
+            height: 750px;
+            max-width: 90vw;
+            max-height: 90vh;
+            background: var(--card-bg);
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            border-radius: 12px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        
+        .card-cell.enlarged img {
+            max-width: 100%;
+            max-height: 600px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        
+        .card-cell.enlarged .card-caption {
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .card-cell.enlarged {
+                top: 5vh;
+                left: 5vw;
+                transform: none !important;
+                width: 90vw;
+                height: 90vh;
+                max-width: none;
+                max-height: none;
+                border-radius: 0;
+                padding: 20px;
+                justify-content: center;
+            }
+            
+            .card-cell.enlarged img {
+                max-height: 80vh;
+            }
+        }
+        
+        body.card-enlarged::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 9998;
+            animation: fadeIn 0.3s;
+        }
+        
+        .card-cell.card-back img {
+            opacity: 0;
+        }
+        
+        .card-cell.card-back::before {
+            content: '';
+            position: absolute;
+            inset: 10px;
+            background: linear-gradient(135deg, #c7a87b, #d4b887);
+            border-radius: 8px;
+            opacity: 0.3;
+        }
+        
+        .card-cell.flipping {
+            animation: flipCard 0.6s ease-in-out;
+        }
+        
+        @keyframes flipCard {
+            0% {
+                transform: rotateY(0deg);
+            }
+            50% {
+                transform: rotateY(90deg);
+            }
+            100% {
+                transform: rotateY(0deg);
+            }
+        }
+        
+        .card-cell.card-front {
+            animation: cardAppear 0.3s ease-out;
+        }
+        
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .card-cell:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(199, 168, 123, 0.2);
+            border-color: rgba(199, 168, 123, 0.5);
+        }
+
+        .card-cell img {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 2/3;
+            object-fit: contain;
+            object-position: center;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .card-cell img {
+                height: auto;
+            }
+        }
+
+        .card-caption {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 1.1rem;
+            color: var(--muted);
+        }
+
+        .card-role {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .reading-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .section-divider {
+            border: 0;
+            height: 1px;
+            background: rgba(199, 168, 123, 0.3);
+            margin: 25px 0;
+        }
+
+        h3, h4 {
+            font-family: "Cinzel", "Georgia", serif;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            margin: 15px 0 12px;
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            color: var(--accent);
+        }
+
+        h4 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        .text-block {
+            background: rgba(199, 168, 123, 0.05);
+            border-left: 3px solid var(--accent);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--fg);
+        }
+
+        .aspects {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        @media (min-width: 768px) {
+            .aspects {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .aspect {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(199, 168, 123, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .aspect strong {
+            color: var(--accent);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .tts-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        .tts-button:hover {
+            background: var(--accent);
+            color: var(--bg);
+            transform: scale(1.1);
+        }
+
+        .tts-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tts-button.speaking {
+            background: var(--accent);
+            color: var(--bg);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .modal img {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: var(--fg);
+            font-size: 2rem;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 30px;
+            margin-bottom: 40px;
+        }
+
+        @media (min-width: 768px) {
+            .action-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, var(--accent), #d4b885);
+            color: var(--bg);
+            border: none;
+            padding: 16px 28px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(199, 168, 123, 0.4);
+            font-family: "Cinzel", serif;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(199, 168, 123, 0.5);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .button-icon {
+            font-size: 1.3rem;
+        }
+
+        /* Master & Tarot Buttons */
+        .master-button, .tarot-button {
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+        }
+
+        .master-button {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .master-button:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .tarot-button {
+            background: linear-gradient(135deg, var(--accent), #d4b887);
+            color: var(--bg);
+            font-weight: 700;
+        }
+
+        .pulsing-button {
+            animation: pulse-bright 1.5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(199, 168, 123, 0.6);
+        }
+
+        @keyframes pulse-bright {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(199, 168, 123, 0.6);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(199, 168, 123, 1);
+                transform: scale(1.05);
+            }
+        }
+
+        /* TTS Mini Button */
+        .tts-mini-button {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .tts-mini-button:hover {
+            background: var(--accent);
+            color: var(--bg);
+            transform: scale(1.1);
+        }
+
+        .tts-mini-button.speaking {
+            background: var(--accent);
+            color: var(--bg);
+            animation: pulse 1s infinite;
+        }
+
+        /* PWA Install Button - IMPROVED */
+        .install-button {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            
+            background: linear-gradient(135deg, #c7a87b, #d4b887);
+            color: #0f0f14;
+            
+            padding: 16px 32px;
+            border-radius: 30px;
+            
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 700;
+            
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 24px rgba(199, 168, 123, 0.7);
+            
+            cursor: pointer;
+            z-index: 999999;
+            
+            display: none;
+            align-items: center;
+            gap: 8px;
+            
+            transition: all 0.3s ease;
+        }
+
+        .install-button:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 12px 32px rgba(199, 168, 123, 0.9);
+        }
+
+        .install-button.pulse-animation {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: translateX(-50%) scale(1);
+                box-shadow: 0 8px 24px rgba(199, 168, 123, 0.7);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.08);
+                box-shadow: 0 16px 40px rgba(199, 168, 123, 1);
+            }
+        }
+
+        /* Exit Button */
+        .exit-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            color: var(--accent);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+        
+        .exit-button.visible {
+            display: flex;
+        }
+
+        /* Sound Toggle Button */
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 45px;
+            height: 45px;
+            background: transparent;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            color: var(--accent);
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 999999;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(199, 168, 123, 0.2);
+            transform: scale(1.1);
+        }
+
+        .sound-toggle.muted {
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+
+        .exit-button:hover {
+            background: var(--accent);
+            color: var(--bg);
+            transform: rotate(90deg);
+            box-shadow: 0 0 20px rgba(199, 168, 123, 0.8);
+        }
+
+        /* Golden Flash Animation */
+        .golden-flash {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(199, 168, 123, 1) 0%, rgba(199, 168, 123, 0.5) 40%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        @keyframes goldenFlash {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0);
+            }
+            30% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(60);
+            }
+        }
+
+        /* Reverse Star Wars Crawl - NO CARD IMAGES */
+        .star-wars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            perspective: none;
+            overflow: hidden;
+            z-index: 150;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reverse-crawl-title {
+            position: fixed;
+            bottom: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cinzel', serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent);
+            text-align: center;
+            z-index: 100;
+            animation: crawlUpPulse 15s ease-out forwards, pulseBright 2s ease-in-out infinite;
+            text-shadow: 0 0 20px var(--accent);
+        }
+
+        @keyframes crawlUpPulse {
+            0% {
+                bottom: -20%;
+                font-size: 24px;
+                opacity: 0;
+                text-shadow: 0 0 10px var(--accent);
+            }
+            10% {
+                opacity: 1;
+            }
+            50% {
+                bottom: 40%;
+                font-size: 48px;
+                text-shadow: 0 0 30px var(--accent);
+            }
+            100% {
+                bottom: 20%;
+                font-size: 48px;
+                opacity: 1;
+                text-shadow: 0 0 20px var(--accent);
+            }
+        }
+
+        @keyframes pulseBright {
+            0%, 100% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateX(-50%) scale(1.05);
+            }
+        }
+
+        @media (max-width: 767px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .text-block {
+                padding: 15px;
+                font-size: 1rem;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+                letter-spacing: 2px;
+            }
+            
+            .exit-button {
+                width: 34px;
+                height: 34px;
+                font-size: 18px;
+                top: 12px;
+                right: 12px;
+            }
+
+            .oracle-button {
+                font-size: 18px;
+                padding: 15px 35px;
+            }
+            
+            @keyframes crawlUpPulse {
+                0% {
+                    bottom: -20%;
+                    font-size: 16px;
+                    opacity: 0;
+                }
+                50% {
+                    bottom: 40%;
+                    font-size: 32px;
+                }
+                100% {
+                    bottom: 15%;
+                    font-size: 32px;
+                    opacity: 1;
+                }
+            }
+
+            .reverse-crawl-title {
+                font-size: 32px !important;
+            }
+            
+            .install-button {
+                font-size: 14px;
+                padding: 12px 24px;
+            }
+
+            .master-button, .tarot-button {
+                font-size: 16px;
+                padding: 12px 24px;
+            }
+
+            .tts-mini-button {
+                position: static;
+                display: block;
+                margin: 10px auto;
+            }
+
+            .sound-toggle {
+                top: 15px;
+                left: 15px;
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Page 1: Start Page -->
+    <div class="page active" id="page1">
+        <button class="exit-button" onclick="exitApp()">✕</button>
+        <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔔</button>
+        <div class="start-content" id="startContent">
+            <button class="oracle-button" onclick="startJourney()">Индивидуальный оракул</button>
+            <p class="subtitle">Приготовьтесь прикоснуться к магии</p>
+        </div>
+        <div class="stars-container" id="starsContainer"></div>
+        <div class="golden-flash" id="goldenFlash"></div>
+    </div>
+
+    <!-- Page 2: Info Page -->
+    <div class="page" id="page2">
+        <button class="exit-button" onclick="exitApp()">✕</button>
+        <div class="container" style="max-width: 800px; text-align: center;">
+            <div style="position: relative; margin-bottom: 20px;">
+                <h1 style="font-family: 'Cinzel', serif; font-size: 3rem; color: var(--accent); text-align: center; margin: 0;">ASTRAL HERO TAROT</h1>
+                <button class="tts-mini-button" onclick="speakPage2Intro()">🔊</button>
+            </div>
+            
+            <p id="page2Intro" style="max-width: 800px; margin: 20px auto; font-size: 18px; line-height: 1.8; text-align: justify;">
+                В основе триплета — расклад из трёх карт, который помогает рассмотреть ситуацию в динамике: от её истоков к наилучшему исходу. В цифровом приложении с колодой Astral Hero Tarot всё происходит легко и наглядно. Нужно сформулировать свой вопрос про себя или в окне диалога, затем система случайным образом выбирает три карты из старших арканов из уникальной авторской колоды Astral Hero Tarot.
+            </p>
+
+            <h2 style="color: var(--accent); text-align: center; margin-top: 30px; font-size: 24px; font-family: 'Cinzel', serif;">
+                Задайте свой вопрос ASTRAL HERO TAROT
+            </h2>
+
+            <textarea id="userQuestion" 
+                      placeholder="Введите ваш вопрос..." 
+                      style="width: 90%; max-width: 600px; height: 80px; 
+                             margin: 20px auto; display: block; padding: 12px; 
+                             background: var(--card-bg); color: var(--fg); 
+                             border: 1px solid var(--accent); border-radius: 8px; 
+                             font-family: 'Cormorant Garamond', serif; font-size: 16px;
+                             resize: vertical;">
+            </textarea>
+
+            <button class="tarot-button pulsing-button" onclick="goToReading()" style="display: block; margin: 20px auto; padding: 16px 32px; border-radius: 30px; font-family: 'Cinzel', serif; font-size: 20px; background: linear-gradient(135deg, var(--accent), #d4b887); border: none; color: var(--bg); font-weight: 700; cursor: pointer;">
+                Спросить у Таро
+            </button>
+
+            <p style="text-align: center; color: var(--muted); font-size: 16px; margin: 20px auto; max-width: 600px;">
+                Вы также можете задать вопрос Мастеру-автору колоды Astral Hero Tarot
+            </p>
+
+            <a href="https://t.me/+ZLhMaibCUZE1ZTRi" target="_blank" class="master-button" onclick="playClickSound()" style="display: block; width: fit-content; margin: 0 auto 30px; padding: 14px 28px; border-radius: 30px; font-family: 'Cinzel', serif; font-size: 18px; background: transparent; border: 2px solid var(--accent); color: var(--accent); text-decoration: none; cursor: pointer;">
+                Спросить у Мастера
+            </a>
+
+            <p id="page2Rest" style="max-width: 800px; margin: 30px auto; font-size: 18px; line-height: 1.8; text-align: justify;">
+                Первая карта открывает прошлое и фундамент события, вторая — отражает суть и эмоции настоящего, а третья подсказывает вероятный исход или совет на будущее. Важно воспринимать каждую карту как часть единого сюжета: их сочетание рождает новую историю, индивидуальную для каждого запроса.
+                <br><br>
+                Образы Astral Hero Tarot раскрывают глубокие архетипы, а подписи и номера арканов делают толкование понятнее даже для новичка. Присмотрись к деталям на изображениях — иногда они подсказывают неожиданные нюансы.
+                <br><br>
+                Если после первого расклада остались вопросы или хочется глубже понять ситуацию, просто повтори действие — цифровой формат позволяет легко вытянуть новый триплет и взглянуть на свой запрос с другой стороны.
+            </p>
+        </div>
+    </div>
+
+    <!-- Star Wars Crawl Container -->
+    <div class="star-wars-container" id="starWarsContainer">
+        <div class="reverse-crawl-title">ASTRAL HERO TAROT</div>
+    </div>
+
+    <!-- Page 3: Oracle Page -->
+    <div class="page" id="page3">
+        <button class="exit-button" onclick="exitApp()">✕</button>
+        <div class="container">
+            <div class="header">
+                <h1>Таро Оракул</h1>
+                <p>Расклад на три карты (триплет): Прошлое (причины), настоящее, будущее (прогноз или совет)</p>
+
+            </div>
+
+            <div class="loading" id="loading">
+                <p>Карты раскладываются...</p>
+            </div>
+
+            <div class="cards-section" id="cardsSection">
+            <div class="cards-grid" id="cardsGrid">
+                <!-- Cards will be inserted here -->
+            </div>
+            
+            <hr class="section-divider">
+            
+            <div class="reading-section" id="readingSection">
+                <h4>Кратко — суть пути</h4>
+                <div class="text-block" id="briefText"></div>
+                <button class="tts-button" onclick="speakText('brief')">🔊</button>
+                
+                <h4>Развернуто — голос Арканов</h4>
+                <div class="text-block" id="detailedText"></div>
+                <button class="tts-button" onclick="speakText('detailed')">🔊</button>
+                
+                <h4>Практические советы</h4>
+                <div class="aspects" id="adviceSection">
+                    <div class="aspect">
+                        <strong>Отношения:</strong>
+                        <span id="relationshipAdvice"></span>
+                    </div>
+                    <div class="aspect">
+                        <strong>Здоровье:</strong>
+                        <span id="healthAdvice"></span>
+                    </div>
+                    <div class="aspect">
+                        <strong>Деньги:</strong>
+                        <span id="moneyAdvice"></span>
+                    </div>
+                </div>
+                <button class="tts-button" onclick="speakText('advice')">🔊</button>
+                
+                <h4>Итоговый синтез трёх Арканов</h4>
+                <div class="text-block" id="synthesisText"></div>
+                <button class="tts-button" onclick="speakText('synthesis')">🔊</button>
+                
+                <hr class="section-divider">
+                
+                <div class="action-buttons">
+                    <button class="action-button" onclick="repeatReading()">
+                        <span class="button-icon">🔄</span>
+                        Повторить расклад
+                    </button>
+                    <a class="action-button" href="https://t.me/Astral_Hero_Community" target="_blank" rel="noopener noreferrer">
+                        <span class="button-icon">💬</span>
+                        Сообщество Телеграм
+                    </a>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shuffle Animation Container -->
+    <div class="shuffle-container" id="shuffleContainer" style="display: none;"></div>
+
+    <!-- Modal for fullscreen card view -->
+    <div class="modal" id="cardModal">
+        <div class="modal-close" onclick="closeModal()">&times;</div>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="">
+        </div>
+    </div>
+
+    <!-- PWA Install Button -->
+    <button class="install-button" id="installButton">
+        <span>⭐</span>
+        <span>Сохранить оракул</span>
+    </button>
+
+    <script>
+        // Tarot card data
+        // Preload all card images on page load
+        function preloadImages() {
+            cards.forEach(card => {
+                const img = new Image();
+                img.src = card.url;
+            });
+        }
+
+        // Call preload on page load
+        window.addEventListener('DOMContentLoaded', preloadImages);
+
+        const cards = [
+            { number: "00", russian_name: "Шут", russian_keyword: "Доверие", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/00_fool.png" },
+            { number: "01", russian_name: "Маг", russian_keyword: "Воля", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/01_magician.png" },
+            { number: "02", russian_name: "Жрица", russian_keyword: "Тайна", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/02_high_priestess.png" },
+            { number: "03", russian_name: "Императрица", russian_keyword: "Изобилие", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/03_empress.png" },
+            { number: "04", russian_name: "Император", russian_keyword: "Структура", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/04_emperor.png" },
+            { number: "05", russian_name: "Иерофант", russian_keyword: "Традиция", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/05_hierophant.png" },
+            { number: "06", russian_name: "Влюбленные", russian_keyword: "Союз", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/06_lovers.png" },
+            { number: "07", russian_name: "Колесница", russian_keyword: "Контроль", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/07_chariot.png" },
+            { number: "08", russian_name: "Справедливость", russian_keyword: "Равновесие", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/08_justice.png" },
+            { number: "09", russian_name: "Отшельник", russian_keyword: "Поиск", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/09_hermit.png" },
+            { number: "10", russian_name: "Колесо Фортуны", russian_keyword: "Перемены", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/10_wheel_of_fortune.png" },
+            { number: "11", russian_name: "Сила", russian_keyword: "Мужество", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/11_strength.png" },
+            { number: "12", russian_name: "Повешенный", russian_keyword: "Жертва", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/12_hanged_man.png" },
+            { number: "13", russian_name: "Смерть", russian_keyword: "Трансформация", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/13_death.png" },
+            { number: "14", russian_name: "Умеренность", russian_keyword: "Синтез", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/14_temperance.png" },
+            { number: "15", russian_name: "Дьявол", russian_keyword: "Зависимость", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/15_devil.png" },
+            { number: "16", russian_name: "Башня", russian_keyword: "Прозрение", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/16_tower.png" },
+            { number: "17", russian_name: "Звезда", russian_keyword: "Надежда", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/17_star.png" },
+            { number: "18", russian_name: "Луна", russian_keyword: "Интуиция", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/18_moon.png" },
+            { number: "19", russian_name: "Солнце", russian_keyword: "Ясность", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/19_sun.png" },
+            { number: "20", russian_name: "Суд", russian_keyword: "Пробуждение", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/20_judgement.png" },
+            { number: "21", russian_name: "Мир", russian_keyword: "Завершение", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/21_world.png" },
+            { number: "22", russian_name: "Герой", russian_keyword: "Опыт", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/22_hero.png" },
+            { number: "23", russian_name: "Белая Карта", russian_keyword: "Свобода Воли", url: "https://cdn.jsdelivr.net/gh/marataitester-blip/tarot/23_white_card.png" }
+        ];
+
+        // Толкования карт для расклада на три карты (прошлое/настоящее/будущее)
+        const cardMeanings = {
+            "00": {
+                past: "В прошлом карта Шута указывает на период, когда вы делали смелые шаги, не боясь неизвестности. Возможно, вы начинали новое дело или отношения спонтанно, доверяя интуиции больше, чем логике. Это время характеризовалось свободой от условностей и открытостью новому опыту. События того периода заложили фундамент для вашей способности рисковать и доверять жизни, даже когда путь впереди не был ясен. Тогда вы могли казаться себе или окружающим наивным, но именно эта детская непосредственность открыла двери, которые иначе остались бы закрытыми.",
+                present: "Сейчас Шут призывает вас сохранять открытость и готовность к переменам. Вы находитесь на пороге нового этапа, и важно не цепляться за прошлое, а смело шагнуть навстречу неизвестному. Это время для спонтанных решений и доверия своей интуиции. Не бойтесь выглядеть наивным или неопытным – именно свежий взгляд поможет вам увидеть возможности, которые другие упускают. Отпустите страх ошибки и позвольте жизни удивлять вас. Будьте готовы к тому, что привычные схемы могут не сработать, зато откроются совершенно неожиданные варианты развития событий.",
+                future: "В будущем Шут обещает новые начинания и неожиданные возможности. Впереди период приключений и открытий, когда жизнь поведёт вас по непроторенным тропам. Важно сохранить детскую непосредственность и готовность учиться. Этот период может принести как радостные сюрпризы, так и вызовы, требующие гибкости мышления. Успех придёт, если вы останетесь верны себе и не станете бояться быть непохожим на других. Доверие к процессу и способность отпускать контроль станут вашими главными союзниками в этом путешествии."
+            },
+            "01": {
+                past: "Маг в прошлом говорит о периоде, когда вы активно использовали свои таланты и умения для достижения целей. Возможно, вы проявляли инициативу, создавали что-то новое или успешно влияли на ход событий. Это время характеризовалось уверенностью в собственных силах и способностью воплощать задуманное в реальность. Опыт того периода научил вас, что у вас есть все необходимые ресурсы для изменения своей жизни к лучшему. Вы уже доказали себе, что можете быть творцом своей реальности, и этот опыт остаётся с вами.",
+                present: "В настоящем Маг указывает на то, что сейчас у вас есть все инструменты и способности для реализации задуманного. Это время действий, а не раздумий. Ваша энергия на пике, и важно направить её в правильное русло. Сосредоточьтесь на конкретных целях и действуйте целенаправленно. Не распыляйтесь на множество дел одновременно – выберите приоритет и вложите в него всю свою волю и мастерство. Сейчас вы способны превратить мечты в реальность, используя свой интеллект, навыки и природную харизму для влияния на обстоятельства.",
+                future: "Впереди вас ждёт период активного творчества и воплощения планов. Маг в будущем обещает успешную реализацию проектов и достижение поставленных целей. Ваши навыки и таланты будут востребованы, и вы сможете проявить себя в полной мере. Важно не терять уверенности и продолжать развивать свои способности. Этот период может принести признание ваших заслуг и открыть новые горизонты для профессионального и личностного роста. Помните, что истинная магия заключается в умении соединять намерение с действием."
+            },
+            "02": {
+                past: "Жрица в прошлом указывает на период, когда вы прислушивались к своей интуиции и внутреннему голосу. Возможно, вы хранили какие-то тайны или переживали важные внутренние процессы, не делясь ими с окружающими. Это было время накопления внутренней мудрости и развития способности видеть за пределами очевидного. Опыт того периода научил вас ценить тишину и уединение как источники силы и понимания. Вы учились доверять тому, что невозможно объяснить логикой.",
+                present: "Сейчас Жрица призывает вас обратиться к внутреннему знанию и интуиции. Не все ответы можно найти во внешнем мире – многое откроется вам в тишине и размышлении. Доверяйте своим предчувствиям и снам, они несут важные послания. Это время для изучения тайных знаний, развития духовных практик или просто для погружения в себя. Не спешите раскрывать все карты окружающим – некоторые вещи должны созреть внутри, прежде чем проявиться вовне. Ваша женская интуитивная мудрость сейчас особенно сильна.",
+                future: "В будущем Жрица обещает раскрытие тайн и глубокое понимание ситуации. То, что сейчас кажется непонятным, скоро откроется вам с неожиданной ясностью. Впереди период духовного роста и развития интуитивных способностей. Вы можете обнаружить в себе скрытые таланты или получить доступ к знаниям, которые раньше были недоступны. Важно оставаться открытым к тонким сигналам и не пытаться всё рационализировать. Мудрость придёт через молчание и созерцание."
+            },
+            "03": {
+                past: "Императрица в прошлом говорит о периоде изобилия, роста и творческого расцвета. Возможно, вы создавали что-то прекрасное, заботились о других или наслаждались плодами своих трудов. Это было время, когда жизнь щедро одаривала вас, и вы чувствовали связь с природными циклами роста и развития. Опыт того периода показал вам, что забота и внимание приносят богатые урожаи. Вы научились ценить красоту во всех её проявлениях и понимать важность питания – как физического, так и эмоционального.",
+                present: "Сейчас Императрица указывает на период процветания и творческой реализации. Это время для создания, взращивания и наслаждения жизнью. Окружите себя красотой, заботьтесь о своём теле и душе, проявляйте любовь к себе и близким. Ваша способность создавать и питать сейчас особенно сильна. Доверяйте естественному течению событий и не торопите процесс – всему своё время. Проявляйте щедрость и изобилие в отношениях, и они ответят вам тем же. Сейчас благоприятный момент для любых творческих начинаний.",
+                future: "В будущем Императрица обещает изобилие и процветание во всех сферах жизни. Ваши усилия принесут богатые плоды, и вы сможете наслаждаться результатами своего труда. Впереди период гармонии, когда материальное и духовное придут в равновесие. Возможны приятные события, связанные с домом, семьёй или творческими проектами. Важно помнить, что истинное изобилие начинается с внутреннего ощущения наполненности и благодарности за то, что уже есть."
+            },
+            "04": {
+                past: "Император в прошлом указывает на период, когда вы проявляли лидерские качества и брали ответственность за свою жизнь. Возможно, вы создавали структуры, устанавливали правила или занимали руководящую позицию. Это было время, когда дисциплина и организованность помогали вам достигать целей. Опыт того периода научил вас ценности порядка и стратегического мышления. Вы поняли, что настоящая власть приходит не через контроль других, а через контроль самого себя.",
+                present: "Сейчас Император призывает вас взять ситуацию под контроль и действовать решительно. Это время для установления чётких границ, создания планов и следования им. Проявляйте твёрдость в своих решениях и не позволяйте эмоциям управлять вами. Используйте логику и разум для оценки ситуации. Возможно, вам нужно взять на себя роль лидера или защитника. Помните, что истинная сила в справедливости и мудрости, а не в жёстком авторитаризме. Создайте прочный фундамент для будущих достижений.",
+                future: "В будущем Император обещает стабильность, достижение целей и признание вашего авторитета. Ваши усилия по созданию порядка и структуры принесут плоды. Впереди период, когда вы сможете проявить свои лидерские качества в полной мере. Возможно продвижение по карьерной лестнице или укрепление вашего социального положения. Важно использовать власть мудро и помнить о том, что с ней приходит ответственность за других."
+            },
+            "05": {
+                past: "Иерофант в прошлом говорит о периоде, когда вы обращались к традиционным ценностям, искали наставничества или следовали установленным правилам. Возможно, вы получали образование, проходили духовное обучение или присоединялись к какой-то организации или сообществу. Это было время, когда мудрость старших и проверенные временем истины помогали вам находить свой путь. Опыт того периода показал вам ценность традиций и важность передачи знаний от поколения к поколению.",
+                present: "Сейчас Иерофант указывает на необходимость обратиться к традиционным методам или найти наставника. Это время для обучения, следования правилам и уважения к авторитетам. Возможно, вам нужно получить официальное благословение или одобрение для своих действий. Изучайте священные тексты, философию или духовные учения. Важно найти баланс между следованием традициям и сохранением собственной индивидуальности. Сейчас благоприятный момент для формализации отношений или вступления в брак.",
+                future: "В будущем Иерофант обещает обретение мудрости через учение и традиции. Возможно, вы сами станете наставником или учителем для других. Впереди период, когда ваш опыт и знания будут востребованы. Вы можете обрести духовное руководство или найти своё место в какой-то традиционной системе. Важно помнить, что истинная духовность не в слепом следовании правилам, а в понимании их глубинного смысла."
+            },
+            "06": {
+                past: "Влюблённые в прошлом указывают на период важного выбора или значимых отношений. Возможно, вы переживали глубокую влюблённость, заключали союз или принимали решение, которое определило ваш дальнейший путь. Это было время, когда сердце и разум должны были прийти к согласию. Опыт того периода научил вас ценности истинной близости и важности честности перед собой в вопросах чувств. Вы поняли, что правильный выбор – это тот, который резонирует с вашими глубинными ценностями.",
+                present: "Сейчас Влюблённые говорят о важном выборе, который стоит перед вами. Это может касаться отношений, карьеры или жизненного пути в целом. Прислушайтесь к своему сердцу, но не забывайте и о голосе разума. Ищите гармонию между желаниями и обязательствами. В отношениях это время глубокой близости и взаимопонимания. Важно быть честным с собой и партнёром. Любой выбор, сделанный из любви и искренности, приведёт вас к правильному пути. Помните, что иногда самый сложный выбор – это выбор между двумя хорошими вариантами.",
+                future: "В будущем Влюблённые обещают гармоничные отношения и правильные выборы. Если вы ищете любовь, она придёт в вашу жизнь естественным образом. Если вы в отношениях, они выйдут на новый уровень близости и понимания. Впереди период, когда ваши ценности и выборы будут проверены, и вы сможете доказать свою верность себе и своим идеалам. Важно помнить, что истинный союз начинается с союза с самим собой."
+            },
+            "07": {
+                past: "Колесница в прошлом говорит о периоде активных действий и достижений. Возможно, вы преодолевали препятствия, двигались к цели с решительностью или одерживали важную победу. Это было время, когда воля и дисциплина помогали вам контролировать ситуацию. Опыт того периода показал вам, что вы способны управлять противоречивыми силами и направлять их в нужное русло. Вы научились сохранять фокус даже в самых сложных обстоятельствах.",
+                present: "Сейчас Колесница указывает на необходимость взять ситуацию под контроль и двигаться вперёд с решительностью. Это время для активных действий и преодоления препятствий. Соберите всю свою волю и направьте энергию на достижение цели. Не позволяйте сомнениям или страхам остановить вас. Важно сохранять баланс между различными аспектами жизни и не терять направление. Ваша способность концентрироваться и действовать целенаправленно сейчас особенно важна. Победа близка, если вы не сдадитесь.",
+                future: "В будущем Колесница обещает триумф и достижение целей. Ваши усилия приведут к значимым результатам, и вы сможете гордиться своими достижениями. Впереди период движения вперёд, когда всё будет складываться в вашу пользу. Возможны путешествия, переезды или другие значительные изменения. Важно продолжать держать руль крепко и не терять ясности видения. Успех придёт через сочетание силы воли и дисциплины."
+            },
+            "08": {
+                past: "Справедливость в прошлом указывает на период, когда вы сталкивались с последствиями своих действий или принимали важные решения. Возможно, были юридические вопросы, контракты или ситуации, требующие беспристрастной оценки. Это было время, когда закон причины и следствия проявился особенно ясно. Опыт того периода научил вас тому, что честность и справедливость в долгосрочной перспективе всегда приносят лучшие результаты. Вы поняли важность взвешенных решений.",
+                present: "Сейчас Справедливость призывает к честности, объективности и балансу. Это время для принятия важных решений, которые должны быть основаны на фактах, а не на эмоциях. Будьте честны с собой и другими. Если есть юридические вопросы, они разрешатся в соответствии с законом и справедливостью. Важно взвесить все аргументы и найти золотую середину. Помните, что каждое действие имеет последствия, поэтому действуйте обдуманно. Карма работает, и всё вернётся к вам в той форме, в которой вы это отдали.",
+                future: "В будущем Справедливость обещает справедливое разрешение ситуации и восстановление баланса. Правда выйдет наружу, и каждый получит по заслугам. Если вы действовали честно, результат будет благоприятным. Впереди период, когда восстановится равновесие, и вы сможете двигаться дальше с чистой совестью. Юридические вопросы решатся в вашу пользу, если вы на стороне правды. Важно продолжать действовать с честностью и благородством."
+            },
+            "09": {
+                past: "Отшельник в прошлом говорит о периоде уединения, самопознания и внутреннего поиска. Возможно, вы отстранились от общества, переживали духовные искания или искали ответы внутри себя. Это было время, когда одиночество стало вашим учителем. Опыт того периода дал вам мудрость и понимание себя, которые невозможно обрести в шуме повседневной жизни. Вы научились находить свет даже в темноте и понимать ценность тишины.",
+                present: "Сейчас Отшельник указывает на необходимость взять паузу и обратиться к внутреннему миру. Это время для размышлений, медитаций и поиска глубинных истин. Отстранитесь от суеты и проведите время в одиночестве или с духовными практиками. Ищите совета мудрого наставника или станьте им для самого себя. Не спешите с решениями – важные ответы придут в тишине. Сейчас период накопления внутренней силы и мудрости, которые скоро понадобятся вам в активной жизни.",
+                future: "В будущем Отшельник обещает обретение мудрости и ясности понимания. Ваш внутренний поиск приведёт к важным открытиям. Возможно, вы станете духовным учителем или наставником для других. Впереди период, когда ваш опыт и знания будут освещать путь не только вам, но и окружающим. Важно не терять связь с внутренним светом и продолжать путь самопознания. Истинная мудрость приходит изнутри."
+            },
+            "10": {
+                past: "Колесо Фортуны в прошлом указывает на период значительных перемен и поворотов судьбы. Возможно, вы переживали взлёты и падения, сталкивались с неожиданными событиями или осознавали цикличность жизни. Это было время, когда удача то благоволила вам, то отворачивалась. Опыт того периода научил вас принимать изменения как естественную часть жизни. Вы поняли, что ничто не длится вечно – ни хорошее, ни плохое.",
+                present: "Сейчас Колесо Фортуны говорит о том, что в вашей жизни происходят или скоро произойдут важные перемены. Судьба делает свой ход, и важно быть готовым принять новые обстоятельства. Не сопротивляйтесь переменам – они несут новые возможности. Помните, что вы не жертва обстоятельств, а участник великого танца жизни. Используйте благоприятные моменты и учитесь на трудностях. Сейчас колесо поворачивается, и от вашей гибкости зависит, как вы пройдёте этот этап.",
+                future: "В будущем Колесо Фортуны обещает улучшение ситуации и новый виток развития. Если сейчас трудные времена, они скоро закончатся. Если дела идут хорошо, они станут ещё лучше, но важно не расслабляться. Впереди период новых возможностей и счастливых случайностей. Судьба подарит вам шанс, важно его не упустить. Помните, что удача любит подготовленных – работайте над собой, и когда колесо повернётся в вашу сторону, вы будете готовы."
+            },
+            "11": {
+                past: "Сила в прошлом говорит о периоде, когда вы проявляли мужество, терпение и внутреннюю силу. Возможно, вы укрощали свои страсти, преодолевали страхи или находили силы в мягкости, а не в агрессии. Это было время, когда вы учились контролировать инстинкты и эмоции. Опыт того периода показал вам, что истинная сила заключается не в подавлении, а в гармоничной интеграции всех частей себя. Вы научились быть одновременно сильным и нежным.",
+                present: "Сейчас Сила призывает вас проявить мужество и внутреннюю стойкость. Это время, когда нужно действовать не из страха или гнева, а из любви и уверенности. Будьте терпеливы с собой и другими. Укрощайте свои страсти не подавлением, а пониманием. Ваша мягкость сейчас – ваша величайшая сила. Не бойтесь показать уязвимость – это признак истинной силы, а не слабости. Действуйте с состраданием и твёрдостью одновременно.",
+                future: "В будущем Сила обещает победу через терпение и внутреннюю силу. Вы справитесь с любыми вызовами, опираясь на свою внутреннюю устойчивость. Впереди период, когда ваше мужество и способность оставаться спокойным в трудностях принесут плоды. Возможно, вы преодолеете давние страхи или достигнете мастерства в управлении своими эмоциями. Помните, что истинный герой не тот, кто не испытывает страха, а тот, кто действует несмотря на него."
+            },
+            "12": {
+                past: "Повешенный в прошлом указывает на период, когда вы были вынуждены остановиться, отпустить контроль или посмотреть на ситуацию с другой стороны. Возможно, это было время ожидания, жертвы или принятия неизбежного. Вы могли чувствовать себя в подвешенном состоянии. Опыт того периода научил вас тому, что иногда бездействие – это тоже действие, а отпускание – это форма силы. Вы поняли ценность изменения перспективы.",
+                present: "Сейчас Повешенный призывает к паузе и изменению точки зрения. Это время, когда нужно остановиться, отпустить контроль и довериться процессу. Возможно, вам придётся чем-то пожертвовать ради большего блага. Не сопротивляйтесь этому переходному периоду – он необходим для вашего роста. Посмотрите на ситуацию с другого угла, и то, что казалось проблемой, может стать решением. Сейчас время для внутренней трансформации, а не внешних действий.",
+                future: "В будущем Повешенный обещает озарение и освобождение через принятие. Ваше терпение и готовность отпустить приведут к неожиданным прорывам. Впереди период, когда вы увидите смысл в том, что раньше казалось бессмысленным. Жертва, которую вы принесли, окажется не потерей, а инвестицией в новое понимание. Важно продолжать доверять процессу и не торопить события."
+            },
+            "13": {
+                past: "Смерть в прошлом говорит о периоде глубокой трансформации и окончания важного этапа жизни. Возможно, вы переживали потерю, расставание или кардинальные изменения. Это было время, когда старое уходило, чтобы освободить место для нового. Опыт того периода научил вас принимать неизбежность перемен и понимать, что смерть одного всегда является рождением другого. Вы прошли через инициацию и стали другим человеком.",
+                present: "Сейчас Смерть указывает на необходимость отпустить старое и принять трансформацию. Это время завершения циклов и начала новых. Не цепляйтесь за то, что уже отжило своё – освободите пространство для нового. Это может быть болезненно, но необходимо для вашего роста. Примите эти изменения с достоинством и доверием. Помните, что Смерть в Таро – это не конец, а трансформация. Старая версия вас умирает, чтобы родилась новая, более аутентичная.",
+                future: "В будущем Смерть обещает глубокое обновление и возрождение. После периода трансформации вы выйдете обновлённым и более сильным. Впереди новая жизнь, новые возможности и новое понимание себя. Всё, что должно было уйти, уйдёт, а то, что истинно ваше, останется или придёт в вашу жизнь. Важно не бояться этих перемен и принять их как естественную часть эволюции души."
+            },
+            "14": {
+                past: "Умеренность в прошлом указывает на период, когда вы искали баланс, практиковали терпение и работали над интеграцией противоположностей. Возможно, вы занимались целительством, учились умеренности или находили срединный путь. Это было время гармонизации различных аспектов жизни. Опыт того периода научил вас ценности золотой середины и важности постепенного, устойчивого прогресса. Вы поняли, что крайности редко приводят к желаемым результатам.",
+                present: "Сейчас Умеренность призывает к балансу, терпению и гармонии. Это время для смешивания различных элементов вашей жизни в правильных пропорциях. Не бросайтесь в крайности – ищите золотую середину. Практикуйте модерацию во всём. Важно соединить духовное и материальное, работу и отдых, действие и созерцание. Процесс важнее результата – доверяйте естественному темпу событий. Сейчас благоприятное время для целительства и восстановления.",
+                future: "В будущем Умеренность обещает достижение гармонии и баланса. Ваше терпение и способность находить срединный путь приведут к устойчивым результатам. Впереди период, когда все аспекты вашей жизни придут в равновесие. Возможно обретение целостности и внутреннего покоя. Важно продолжать практиковать умеренность и не позволять крайностям нарушать вашу гармонию."
+            },
+            "15": {
+                past: "Дьявол в прошлом говорит о периоде, когда вы были в плену у зависимостей, иллюзий или материальных привязанностей. Возможно, вы переживали искушения, чувствовали себя скованным обстоятельствами или отношениями. Это было время, когда страсти и желания управляли вами. Опыт того периода показал вам, насколько легко стать заложником своих же привычек и убеждений. Вы узнали тёмную сторону своей природы и поняли силу теневых аспектов психики.",
+                present: "Сейчас Дьявол указывает на то, что вы можете быть связаны невидимыми цепями – зависимостью, страхом, токсичными отношениями или ограничивающими убеждениями. Осознайте эти оковы – первый шаг к освобождению. Взгляните честно на свои теневые стороны и признайте их. Помните, что эти цепи держатся только силой вашей привычки – вы можете их снять в любой момент. Не вините внешние обстоятельства или других людей – истинная свобода начинается с принятия ответственности.",
+                future: "В будущем Дьявол предупреждает о возможных искушениях или необходимости освободиться от зависимостей. Впереди период, когда вам предстоит столкнуться с соблазнами или теневыми аспектами. Это может быть испытанием или возможностью для освобождения. Важно помнить, что у вас всегда есть выбор. Осознание – первый шаг к трансформации. Интегрируйте свою тень, вместо того чтобы отрицать её."
+            },
+            "16": {
+                past: "Башня в прошлом указывает на период внезапных разрушений, кризисов или шокирующих откровений. Возможно, рухнули ваши иллюзии, планы или устоявшиеся структуры жизни. Это было болезненное, но необходимое разрушение того, что было построено на ложном фундаменте. Опыт того периода, каким бы травматичным он ни был, освободил вас от того, что сдерживало ваш рост. Вы прошли через огонь трансформации и выжили.",
+                present: "Сейчас Башня говорит о том, что в вашей жизни происходят или скоро произойдут внезапные изменения. Это может быть шокирующее открытие, разрушение иллюзий или крах того, что казалось прочным. Не сопротивляйтесь этому процессу – он очищает вашу жизнь от всего лишнего. То, что рушится, уже не служило вашему высшему благу. Доверьтесь процессу, даже если сейчас это болезненно. Из хаоса рождается новый порядок.",
+                future: "В будущем Башня предупреждает о возможных потрясениях, но также обещает освобождение через разрушение старого. Впереди период очищения, когда всё ненужное уйдёт из вашей жизни. Это может быть неожиданно и резко, но в конечном итоге пойдёт вам на пользу. После грозы всегда приходит ясность. Важно быть готовым отпустить и начать строить заново на более прочном фундаменте истины."
+            },
+            "17": {
+                past: "Звезда в прошлом говорит о периоде надежды, исцеления и обретения веры после трудных времён. Возможно, вы переживали духовное пробуждение, находили своё призвание или чувствовали связь с чем-то большим, чем вы сами. Это было время восстановления и обновления. Опыт того периода показал вам, что даже после самой тёмной ночи всегда наступает рассвет. Вы обрели надежду и веру в лучшее будущее.",
+                present: "Сейчас Звезда приносит надежду, вдохновение и чувство правильности пути. Это время для следования своей мечте и доверия интуиции. Вы находитесь в гармонии с вселенной, и она поддерживает вас. Ваши таланты и дары готовы проявиться. Делитесь своим светом с миром – вы можете вдохновить других. Верьте в себя и свою звезду. Сейчас благоприятный период для исцеления, творчества и духовного роста.",
+                future: "В будущем Звезда обещает исполнение надежд и реализацию мечты. Ваш свет будет сиять ярко, и вы найдёте своё место в мире. Впереди период вдохновения, творчества и духовного подъёма. Вы почувствуете связь со своим истинным предназначением. Важно оставаться верным своему видению и продолжать следовать за своей звездой. Она ведёт вас к вашей судьбе."
+            },
+            "18": {
+                past: "Луна в прошлом указывает на период неопределённости, иллюзий и столкновения с бессознательным. Возможно, вы переживали страхи, тревоги или проходили через эмоционально сложное время. Реальность казалась размытой, а истина ускользала. Это был период работы с теневыми аспектами и интуитивного познания. Опыт того периода научил вас доверять интуиции даже тогда, когда логика молчит.",
+                present: "Сейчас Луна говорит о том, что не всё является тем, чем кажется. Это время неопределённости, когда важно доверять своей интуиции больше, чем логике. Обращайте внимание на сны, знаки и предчувствия. Возможно, вас окружают иллюзии или кто-то что-то скрывает. Будьте осторожны, но не позволяйте страхам парализовать вас. Это период работы с подсознанием и теневыми аспектами. Важно различать реальные угрозы и призраки страха.",
+                future: "В будущем Луна предупреждает о периоде неясности, когда нужно будет полагаться на интуицию. Возможны иллюзии или обманы, но также и глубокие интуитивные прозрения. Впереди время, когда ваши страхи могут проявиться, чтобы быть исцелёнными. Доверяйте своему внутреннему голосу и не бойтесь исследовать тёмные уголки своей психики. Луна освещает путь даже в самой тёмной ночи."
+            },
+            "19": {
+                past: "Солнце в прошлом говорит о периоде радости, успеха и ясности. Возможно, вы переживали счастливое время, когда всё складывалось благоприятно, и вы чувствовали себя наполненным энергией и оптимизмом. Это было время расцвета и достижений. Опыт того периода показал вам вашу истинную природу – сияющую и полную жизни. Вы помните это состояние и можете вернуться к нему.",
+                present: "Сейчас Солнце приносит ясность, радость и успех. Это время для празднования жизни и наслаждения её дарами. Всё становится очевидным, туман рассеивается, и вы ясно видите свой путь. Ваша энергия на пике, и вы излучаете позитив. Делитесь своим светом и теплом с окружающими. Это благоприятный период для всех начинаний. Будьте собой – ваша аутентичность сейчас ваша величайшая сила.",
+                future: "В будущем Солнце обещает успех, радость и осуществление желаний. Впереди период процветания и счастья. Ваши усилия увенчаются триумфом, и вы сможете насладиться плодами своего труда. Важно сохранять оптимизм и щедро делиться своим светом. Солнце светит для всех, и ваш успех не умаляет успеха других. Празднуйте жизнь и будьте благодарны за её дары."
+            },
+            "20": {
+                past: "Суд в прошлом указывает на период важных осознаний, возрождения или второго шанса. Возможно, вы переживали момент истины, когда пришлось честно взглянуть на свою жизнь и сделать выводы. Это было время пробуждения к новому пониманию себя. Опыт того периода освободил вас от прошлого и дал возможность начать заново. Вы услышали зов своей истинной сущности.",
+                present: "Сейчас Суд призывает к пробуждению и переоценке своей жизни. Это время для честного взгляда на прошлое, прощения себя и других, и освобождения от того, что больше не служит вам. Слушайте зов своей души – она знает, куда вам нужно идти. Возможно второе рождение, новое начало на более высоком уровне осознанности. Важно ответить на этот зов и не упустить возможность трансформации.",
+                future: "В будущем Суд обещает пробуждение, возрождение и выход на новый уровень существования. Ваше прошлое будет пересмотрено с новой перспективы, и вы обретёте освобождение. Впереди период, когда вы ответите на зов своего высшего предназначения. Важно быть готовым к трансформации и не цепляться за старую идентичность. Вы возрождаетесь как феникс из пепла."
+            },
+            "21": {
+                past: "Мир в прошлом говорит о периоде завершения важного цикла и достижения целостности. Возможно, вы успешно завершили значимый проект, достигли долгожданной цели или обрели чувство завершённости. Это было время, когда все части головоломки сложились воедино. Опыт того периода дал вам понимание полного цикла и ощущение гармонии. Вы достигли того, к чему стремились.",
+                present: "Сейчас Мир указывает на завершение цикла и достижение целостности. Это время для празднования достижений и осознания того, как далеко вы продвинулись. Вы обрели баланс между всеми аспектами жизни и чувствуете себя целостным. Наслаждайтесь этим моментом триумфа. Скоро начнётся новый цикл, но сейчас важно признать и отпраздновать завершение текущего. Вы достигли мастерства и можете гордиться собой.",
+                future: "В будущем Мир обещает успешное завершение всех начинаний и достижение желаемого. Впереди период, когда вы обретёте целостность и гармонию. Всё придёт к логическому завершению, и вы почувствуете удовлетворение от проделанного пути. Это не конец, а скорее завершение одного цикла перед началом следующего на более высоком уровне. Важно принять этот успех с благодарностью и готовностью к новым начинаниям."
+            },
+            "22": {
+                past: "Герой в прошлом указывает на период, когда вы накапливали опыт через преодоление испытаний и трудностей. Возможно, вы проходили через героическое путешествие, сталкивались с вызовами и выходили из них победителем. Это было время формирования вашего характера и обретения мудрости через опыт. Каждое испытание делало вас сильнее. Вы стали героем собственной истории.",
+                present: "Сейчас Герой призывает вас использовать весь накопленный опыт и мудрость. Это время, когда ваше путешествие достигает кульминации, и вы готовы проявить себя в полной мере. Действуйте смело, опираясь на всё, чему вы научились. Вы прошли через многое и готовы к главному испытанию. Доверяйте своему опыту и интуиции. Сейчас момент, когда вы можете стать героем не только для себя, но и для других.",
+                future: "В будущем Герой обещает признание ваших заслуг и достижение мастерства. Впереди период, когда ваш опыт будет востребован и оценён. Вы станете учителем и примером для других. Важно помнить, что истинный герой никогда не прекращает учиться и расти. Ваше путешествие продолжается, но теперь на новом уровне осознанности и мастерства."
+            },
+            "23": {
+                past: "Белая Карта в прошлом указывает на период, когда вы осознавали свою свободу выбора и ответственность за свою жизнь. Возможно, вы освобождались от предопределённости и учились создавать свою реальность. Это было время, когда вы поняли, что не являетесь жертвой обстоятельств. Опыт того периода дал вам понимание силы свободной воли и важности осознанного выбора.",
+                present: "Сейчас Белая Карта напоминает вам о вашей абсолютной свободе выбора. Ничто не предопределено – вы создаёте свою реальность каждым решением и действием. Это великая сила и великая ответственность. Не ищите внешних указаний – ответ внутри вас. Вы сами решаете, кем быть и куда идти. Это может быть пугающе, но также невероятно освобождающе. Используйте эту свободу мудро.",
+                future: "В будущем Белая Карта обещает полную свободу создавать жизнь по своему выбору. Впереди период неограниченных возможностей. Ваше будущее не записано в звёздах – оно в ваших руках. Важно помнить, что с этой свободой приходит ответственность за последствия своих выборов. Действуйте осознанно и создавайте будущее, которого действительно желаете."
+            }
+        };
+
+        let currentReading = {
+            cards: [],
+            texts: {}
+        };
+
+        let availableVoices = [];
+        let selectedVoice = null;
+        let useResponsiveVoice = false;
+        let currentUtterance = null;
+        
+        // In-memory storage (replaces localStorage)
+        let appInstalled = false;
+        let soundEnabled = true;
+        let templateIndex = 0;
+
+        // Web Audio API Sound System
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Initialize stars on load
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+        });
+
+        function playClickSound() {
+            if (!soundEnabled) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        function playMagicRustle() {
+            if (!soundEnabled) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.8);
+            oscillator.type = 'sawtooth';
+            
+            filter.type = 'lowpass';
+            filter.frequency.value = 800;
+            
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.8);
+        }
+
+        function playSingularitySound() {
+            if (!soundEnabled) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(40, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(120, audioContext.currentTime + 1.8);
+            oscillator.type = 'triangle';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.8);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 1.8);
+        }
+
+        function playCardFlipSound() {
+            if (!soundEnabled) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.2);
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        // Exit function
+        function exitApp() {
+            playClickSound();
+            window.close();
+            setTimeout(() => {
+                window.location.href = 'about:blank';
+            }, 100);
+        }
+        
+        // Update exit button visibility
+        function updateExitButton() {
+            const exitBtn = document.querySelector('.exit-button');
+            const currentPage = document.querySelector('.page.active');
+            
+            if (currentPage && currentPage.id === 'page1') {
+                exitBtn.classList.add('visible');
+            } else {
+                exitBtn.classList.remove('visible');
+            }
+        }
+
+        // Page transition functions
+        function startJourney() {
+            playClickSound();
+            const startContent = document.getElementById('startContent');
+            
+            // Fade out button and text
+            startContent.classList.add('fade-out');
+            
+            // Golden flash only - 1.5 seconds
+            setTimeout(() => {
+                playSingularitySound();
+                const flash = document.getElementById('goldenFlash');
+                flash.style.animation = 'goldenFlash 1.5s ease-out forwards';
+            }, 100);
+            
+            // After 1.5 seconds, go to page 2
+            setTimeout(() => {
+                document.getElementById('page1').classList.remove('active');
+                document.getElementById('page2').classList.add('active');
+                updateExitButton();
+                checkInstallButton();
+            }, 1500);
+        }
+
+        function createStars() {
+            const starsContainer = document.getElementById('starsContainer');
+            starsContainer.innerHTML = '';
+            
+            const starCount = 20;
+            const radius = 188; // Radius increased by 10mm (38px): was 150px
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Position stars in a circle
+                const angle = (i / starCount) * 2 * Math.PI;
+                const x = 50 + (radius / window.innerWidth * 100) * Math.cos(angle);
+                const y = 50 + (radius / window.innerHeight * 100) * Math.sin(angle);
+                
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.animationDelay = `${i * 0.15}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Function removed - no arcana icons in new design
+
+        function showStarWarsCrawl() {
+            const page1 = document.getElementById('page1');
+            const crawlContainer = document.getElementById('starWarsContainer');
+            
+            // Hide page 1
+            page1.classList.remove('active');
+            updateExitButton();
+            
+            // Show crawl container - NO ARCANA ICONS
+            crawlContainer.style.display = 'flex';
+            
+            // After crawl (15s), show page 2
+            setTimeout(() => {
+                crawlContainer.style.display = 'none';
+                document.getElementById('page2').classList.add('active');
+                updateExitButton();
+                checkInstallButton();
+            }, 15000);
+        }
+
+        function goToReading() {
+            playClickSound();
+            document.getElementById('page2').classList.remove('active');
+            document.getElementById('page3').classList.add('active');
+            updateExitButton();
+            checkInstallButton();
+            
+            // Auto-draw cards
+            setTimeout(() => {
+                drawCards();
+            }, 500);
+        }
+
+        function speakPage2Intro() {
+            const page2Intro = document.getElementById('page2Intro').innerText;
+            const button = event.target;
+            
+            // Check if speaking
+            const isSpeaking = (typeof responsiveVoice !== 'undefined' && responsiveVoice.isPlaying()) ||
+                               speechSynthesis.speaking;
+            
+            if (isSpeaking) {
+                // Stop speech
+                if (typeof responsiveVoice !== 'undefined') {
+                    responsiveVoice.cancel();
+                }
+                speechSynthesis.cancel();
+                button.textContent = '🔊 Озвучить';
+                button.classList.remove('speaking');
+                return;
+            }
+
+            speakTextNaturally(page2Intro, button);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const soundToggle = document.getElementById('soundToggle');
+            soundToggle.classList.toggle('muted');
+            playClickSound();
+        }
+
+
+
+        function drawCards() {
+            playClickSound();
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('cardsSection').style.display = 'none';
+            
+            setTimeout(() => {
+                // Select 3 unique random cards
+                const selectedCards = [];
+                const availableCards = [...cards];
+                
+                for (let i = 0; i < 3; i++) {
+                    const randomIndex = Math.floor(Math.random() * availableCards.length);
+                    selectedCards.push(availableCards.splice(randomIndex, 1)[0]);
+                }
+                
+                currentReading.cards = selectedCards;
+                displayCards(selectedCards);
+                generateReading(selectedCards);
+                
+                // Hide loading, show results
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('cardsSection').style.display = 'block';
+                
+                // Trigger card flip animation
+                setTimeout(() => {
+                    revealCards();
+                }, 100);
+                
+                // Smooth scroll to results
+                document.getElementById('cardsSection').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            }, 1500);
+        }
+        
+        // Card flip reveal animation with sound
+        function revealCards() {
+            const cards = document.querySelectorAll('.card-cell');
+            
+            cards.forEach((card, index) => {
+                card.classList.add('card-back');
+                
+                setTimeout(() => {
+                    playCardFlipSound();
+                    card.classList.add('flipping');
+                    
+                    setTimeout(() => {
+                        card.classList.remove('card-back', 'flipping');
+                        card.classList.add('card-front');
+                    }, 600);
+                }, index * 800);
+            });
+        }
+
+        let enlargedCard = null;
+        
+        function displayCards(selectedCards) {
+            const cardsGrid = document.getElementById('cardsGrid');
+            const roles = ['Прошлое (причины)', 'Настоящее (ситуация сейчас)', 'Будущее (прогноз)'];
+            
+            cardsGrid.innerHTML = '';
+            
+            selectedCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-cell';
+                
+                cardElement.innerHTML = `
+                    <img src="${card.url}" alt="${card.russian_name}">
+                    <div class="card-caption">
+                        <div class="card-role">${roles[index]}</div>
+                        <div style="margin-top: 6px;">${card.russian_name} — ${card.russian_keyword}</div>
+                    </div>
+                `;
+                
+                cardsGrid.appendChild(cardElement);
+            });
+            
+            document.getElementById('readingSection').style.display = 'block';
+            setupCardClick();
+        }
+        
+        function setupCardClick() {
+            document.querySelectorAll('.card-cell').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    playClickSound();
+                    
+                    if (enlargedCard === this) {
+                        this.classList.remove('enlarged');
+                        document.body.classList.remove('card-enlarged');
+                        enlargedCard = null;
+                    } else {
+                        document.querySelectorAll('.card-cell.enlarged').forEach(c => {
+                            c.classList.remove('enlarged');
+                        });
+                        
+                        this.classList.add('enlarged');
+                        document.body.classList.add('card-enlarged');
+                        enlargedCard = this;
+                    }
+                });
+            });
+        }
+
+        function generateReading(selectedCards) {
+            // Get user question
+            const userQuestion = document.getElementById('userQuestion')?.value.trim() || 'общая ситуация';
+            
+            // Create unified narrative based on the three cards
+            const past = selectedCards[0];
+            const present = selectedCards[1];
+            const future = selectedCards[2];
+            
+            // Get card meanings from the comprehensive Russian interpretations
+            const pastMeaning = cardMeanings[past.number]?.past || 'Толкование для прошлого недоступно.';
+            const presentMeaning = cardMeanings[present.number]?.present || 'Толкование для настоящего недоступно.';
+            const futureMeaning = cardMeanings[future.number]?.future || 'Толкование для будущего недоступно.';
+            
+            // Generate brief summary using card keywords
+            const briefText = `Ваш вопрос о ${userQuestion} открывает важную картину. В прошлом ${past.russian_name} (${past.russian_keyword}) заложила основу для текущей ситуации. Сейчас ${present.russian_name} (${present.russian_keyword}) показывает состояние дел в настоящем. Будущее обещает ${future.russian_name} (${future.russian_keyword}) – путь, который разворачивается перед вами.`;
+            document.getElementById('briefText').innerHTML = briefText;
+            currentReading.texts.brief = briefText;
+            
+            // Generate detailed reading using comprehensive Russian interpretations
+            const detailedText = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--accent); margin-bottom: 10px;">🌙 Прошлое: ${past.russian_name} — ${past.russian_keyword}</h4>
+                    <p>${pastMeaning}</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--accent); margin-bottom: 10px;">⭐ Настоящее: ${present.russian_name} — ${present.russian_keyword}</h4>
+                    <p>${presentMeaning}</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--accent); margin-bottom: 10px;">☀️ Будущее: ${future.russian_name} — ${future.russian_keyword}</h4>
+                    <p>${futureMeaning}</p>
+                </div>
+            `;
+            document.getElementById('detailedText').innerHTML = detailedText;
+            currentReading.texts.detailed = detailedText.replace(/<[^>]*>/g, '');
+            
+            // Generate practical advice
+            const advice = createPracticalAdvice(past, present, future, userQuestion);
+            document.getElementById('relationshipAdvice').innerHTML = advice.relationships;
+            document.getElementById('healthAdvice').innerHTML = advice.health;
+            document.getElementById('moneyAdvice').innerHTML = advice.money;
+            currentReading.texts.advice = `Отношения: ${advice.relationships}. Здоровье: ${advice.health}. Деньги: ${advice.money}.`;
+            
+            // Generate synthesis
+            const synthesisTemplates = [
+                `Карты раскрывают динамику вашей ситуации с "${userQuestion}". События прошлого, отражённые в карте ${past.russian_name}, создали основу для текущей ситуации (${present.russian_name}). Двигаясь в этом направлении, вы придёте к результату, который символизирует ${future.russian_name}. Это естественный путь развития, где каждая карта дополняет предыдущую, создавая целостную картину вашего пути.`,
+                `Ваш путь начался с энергии ${past.russian_name} (${past.russian_keyword}), которая привела вас к нынешнему состоянию ${present.russian_name} (${present.russian_keyword}). Карта ${future.russian_name} (${future.russian_keyword}) показывает, что вас ждёт впереди, если вы останетесь верны выбранному курсу. Доверьтесь этому процессу и помните, что каждый этап важен для вашего роста.`,
+                `История вашей ситуации "${userQuestion}" разворачивается от ${past.russian_name} через ${present.russian_name} к ${future.russian_name}. Каждая карта дополняет предыдущую, создавая целостную картину вашего пути. Прошлое дало вам опыт ${past.russian_keyword.toLowerCase()}, настоящее требует ${present.russian_keyword.toLowerCase()}, а будущее обещает ${future.russian_keyword.toLowerCase()}. Примите этот путь с открытым сердцем.`
+            ];
+            const synthesisText = synthesisTemplates[templateIndex % synthesisTemplates.length];
+            templateIndex = (templateIndex + 1) % synthesisTemplates.length;
+            document.getElementById('synthesisText').innerHTML = synthesisText;
+            currentReading.texts.synthesis = synthesisText;
+        }
+
+        // 5 Reading Templates with Rotation
+        const readingTemplates = [
+            // Template 1: Direct Analysis
+            {
+                brief: (past, present, future, question) => `Ваш вопрос о ${question} открывает ясную картину. ${past.russian_name} в прошлом заложила фундамент через ${past.russian_keyword.toLowerCase()}. Сегодня ${present.russian_name} приносит ${present.russian_keyword.toLowerCase()}, а в будущем ${future.russian_name} обещает ${future.russian_keyword.toLowerCase()}. Это путь естественного развития.`,
+                detailed: (past, present, future, question) => `Рассматривая вашу ситуацию с "${question}", карты говорят прямо и ясно. ${past.russian_name} в позиции прошлого указывает на то, что энергия ${past.russian_keyword.toLowerCase()} уже сформировала основу. Этот опыт не исчез — он трансформировался в нынешнюю ситуацию, которую отражает ${present.russian_name}. Сейчас вы находитесь в состоянии ${present.russian_keyword.toLowerCase()}, которое открывает дверь к будущему. ${future.russian_name} обещает ${future.russian_keyword.toLowerCase()} — это естественное продолжение вашего пути. Важно помнить: будущее создаётся вашими выборами сегодня.`,
+                synthesis: (past, present, future, question) => `Три Аркана создают единый ответ на ваш запрос "${question}". ${past.russian_keyword}, ${present.russian_keyword} и ${future.russian_keyword} — это не просто последовательность, а живой диалог энергий, которые ведут вас к разрешению. Прислушайтесь к каждой карте, позвольте их мудрости проникнуть в ваше сознание.`
+            },
+            
+            // Template 2: Narrative Story
+            {
+                brief: (past, present, future, question) => `Позвольте рассказать историю вашей ситуации с "${question}". Всё началось с ${past.russian_name}, которая принесла ${past.russian_keyword.toLowerCase()}. Сегодня ${present.russian_name} разворачивает сюжет через ${present.russian_keyword.toLowerCase()}. Путь ведёт к ${future.russian_name} и ${future.russian_keyword.toLowerCase()}, обещая завершение главы.`,
+                detailed: (past, present, future, question) => `Ваша история с "${question}" разворачивается как увлекательная сага. В прологе появляется ${past.russian_name} — архетип ${past.russian_keyword.toLowerCase()}, который заложил тему вашего повествования. Это было началом, семенем, посаженным в плодородную почву опыта. Теперь этот росток расцвёл в ${present.russian_name} — главного героя сегодняшнего дня, несущего ${present.russian_keyword.toLowerCase()}. Это кульминация вашей истории, момент выбора и действия. А впереди ждёт эпилог с ${future.russian_name}, обещая ${future.russian_keyword.toLowerCase()}. Это естественное развитие сюжета, которое вы сами создаёте.`,
+                synthesis: (past, present, future, question) => `Ваша история о "${question}" — это не просто последовательность событий, а живое повествование, где ${past.russian_name}, ${present.russian_name} и ${future.russian_name} являются главами одной книги. Каждый Аркан добавляет свою краску в картину, создавая уникальный узор вашего пути. Читайте эту историю с открытым сердцем, и она подскажет вам правильную дорогу.`
+            },
+            
+            // Template 3: Advisory
+            {
+                brief: (past, present, future, question) => `Карты дают важные советы относительно "${question}". ${past.russian_name} в прошлом учит нас ценности ${past.russian_keyword.toLowerCase()}. ${present.russian_name} сейчас предлагает применить ${present.russian_keyword.toLowerCase()}. ${future.russian_name} рекомендует в будущем следовать путём ${future.russian_keyword.toLowerCase()}. Прислушайтесь к этим советам.`,
+                detailed: (past, present, future, question) => `Отвечая на ваш запрос "${question}", Арканы дают мудрые советы. ${past.russian_name} советует вспомнить уроки прошлого — вы уже прошли через энергию ${past.russian_keyword.toLowerCase()}, и этот опыт неоценим. Не игнорируйте его, а используйте как фундамент. Сегодня ${present.russian_name} призывает к ${present.russian_keyword.toLowerCase()} — это ключевой совет для вашего нынешнего положения. Применяйте это качество во всех ваших решениях. А ${future.russian_name} показывает направление: двигайтесь к ${future.russian_keyword.toLowerCase()}. Это не предсказание, а рекомендация. Вы сами формируете своё будущее.`,
+                synthesis: (past, present, future, question) => `Синтез советов по "${question}" таков: из опыта ${past.russian_keyword.toLowerCase()} через применение ${present.russian_keyword.toLowerCase()} к достижению ${future.russian_keyword.toLowerCase()} — вот ваш путь. Это мудрая последовательность, проверенная временем. Доверьтесь ей, и она приведёт к желаемому результату.`
+            },
+            
+            // Template 4: Emotional
+            {
+                brief: (past, present, future, question) => `Чувствуете ли вы глубокую связь с вопросом "${question}"? ${past.russian_name} несёт эмоциональную энергию ${past.russian_keyword.toLowerCase()} из прошлого. ${present.russian_name} резонирует с вашим настоящим через ${present.russian_keyword.toLowerCase()}. ${future.russian_name} открывает новые эмоциональные возможности ${future.russian_keyword.toLowerCase()}.`,
+                detailed: (past, present, future, question) => `Размышляя о "${question}", почувствуйте, как откликаются Арканы в вашем сердце. ${past.russian_name} — это эмоция ${past.russian_keyword.toLowerCase()}, которая оставила след в вашей душе. Возможно, вы ещё чувствуете этот отголосок. Не подавляйте его, а принимайте как часть вашего опыта. Сейчас ${present.russian_name} звучит на частоте ${present.russian_keyword.toLowerCase()} — это ваше текущее эмоциональное состояние. Проживайте его полностью, не судите себя. А ${future.russian_name} обещает трансформацию через ${future.russian_keyword.toLowerCase()} — новое эмоциональное пространство, которое откроется, когда вы будете готовы.`,
+                synthesis: (past, present, future, question) => `Ваш эмоциональный путь с "${question}" — это путешествие сердца. От ${past.russian_keyword.toLowerCase()} через ${present.russian_keyword.toLowerCase()} к ${future.russian_keyword.toLowerCase()} — каждый шаг наполнен чувствами. Доверьтесь своему сердцу, позвольте эмоциям быть вашим проводником. Они знают дорогу.`
+            },
+            
+            // Template 5: Archetypal
+            {
+                brief: (past, present, future, question) => `Архетипы отвечают на ваш запрос "${question}". ${past.russian_name} — символ ${past.russian_keyword.toLowerCase()}, заложивший основу. ${present.russian_name} воплощает ${present.russian_keyword.toLowerCase()} здесь и сейчас. ${future.russian_name} манифестирует ${future.russian_keyword.toLowerCase()} в грядущем. Вечные силы работают через вас.`,
+                detailed: (past, present, future, question) => `В контексте "${question}", карты раскрывают архетипический язык души. ${past.russian_name} в прошлом — это архетип ${past.russian_keyword.toLowerCase()}, один из вечных образов коллективного бессознательного. Вы взаимодействовали с этой силой, и она оставила отпечаток на вашей психе. Теперь ${present.russian_name} действует через ${present.russian_keyword.toLowerCase()} — вы находитесь в поле влияния этой первозданной силы. И ${future.russian_name} призывает вас к интеграции с ${future.russian_keyword.toLowerCase()} — следующим шагом в вашем архетипическом путешествии. Это не линейный процесс, а спираль роста, где вы возвращаетесь к подобным темам, но на новом уровне.`,
+                synthesis: (past, present, future, question) => `Архетипический ответ на "${question}" гласит: вы проходите классическое путешествие героя. ${past.russian_name}, ${present.russian_name} и ${future.russian_name} — это вехи на пути индивидуации. Каждый Аркан — это врата к большей целостности. Принимайте этот вызов, и вы станете ближе к своей истинной сущности.`
+            }
+        ];
+
+
+
+        function createPracticalAdvice(past, present, future, question) {
+            const adviceTemplates = {
+                relationships: [
+                    `Опирайтесь на опыт прошлого, живите настоящим моментом и создавайте пространство для роста в отношениях.`,
+                    `В отношениях важно найти баланс между тем, что было, что есть и к чему стремитесь вместе.`,
+                    `Позвольте прошлому научить вас, настоящему — соединить вас, а будущему — вдохновить на новые глубины близости.`
+                ],
+                health: [
+                    `Прислушивайтесь к сигналам тела, живите осознанно в настоящем и создавайте привычки для долгосрочного благополучия.`,
+                    `Здоровье — это процесс, где важны и наработанные паттерны, и текущие выборы, и видение себя в будущем.`,
+                    `Интегрируйте мудрость тела, ясность ума и вдохновение души в единую практику заботы о себе.`
+                ],
+                money: [
+                    `Используйте накопленный опыт, принимайте взвешенные решения сейчас и планируйте с верой в изобилие.`,
+                    `В финансах сочетайте проверенные стратегии с гибкостью к новым возможностям и долгосрочным видением.`,
+                    `Деньги — это энергия, которая лучше всего течет через осознанные действия, основанные на мудрости и устремленные к цели.`
+                ]
+            };
+            
+            return {
+                relationships: adviceTemplates.relationships[Math.floor(Math.random() * adviceTemplates.relationships.length)],
+                health: adviceTemplates.health[Math.floor(Math.random() * adviceTemplates.health.length)],
+                money: adviceTemplates.money[Math.floor(Math.random() * adviceTemplates.money.length)]
+            };
+        }
+
+
+
+        // Load browser voices with enhanced male detection
+        function loadVoices() {
+            availableVoices = speechSynthesis.getVoices();
+            
+            if (availableVoices.length > 0) {
+                selectedVoice = findBestMaleVoice();
+                
+                console.log('🎙️ Voice Selection Report:');
+                console.log('═'.repeat(60));
+                
+                // List all Russian male voices
+                const russianMaleVoices = availableVoices.filter(v => 
+                    v.lang.toLowerCase().includes('ru') && isMaleVoice(v)
+                );
+                
+                console.log(`\n🇷🇺 Russian Male Voices Found (${russianMaleVoices.length}):`);
+                russianMaleVoices.forEach(v => {
+                    const quality = isHighQualityVoice(v) ? '⭐ Premium' : 'Standard';
+                    console.log(`  ${quality} ${v.name} (${v.lang})`);
+                });
+                
+                if (selectedVoice) {
+                    console.log(`\n✓ Selected: ${selectedVoice.name} (${selectedVoice.lang})`);
+                    useResponsiveVoice = false;
+                } else {
+                    console.log(`\n⚠️ No suitable male voice found in browser`);
+                    console.log(`✓ Fallback: ResponsiveVoice Russian Male`);
+                    useResponsiveVoice = true;
+                }
+                
+                console.log('═'.repeat(60));
+                
+                showVoiceInfo();
+            }
+        }
+        
+        // Check if voice is male
+        function isMaleVoice(voice) {
+            const maleName = voice.name.toLowerCase();
+            
+            // Male name patterns
+            const maleKeywords = [
+                'male', 'мужской', 'man', 'homme', 
+                // Russian male names
+                'filipp', 'ermil', 'zahar', 'захар', 'филипп', 'ермил',
+                'alexander', 'александр', 'kirill', 'кирилл', 'anton', 'антон',
+                'dmitry', 'дмитрий', 'mikhail', 'михаил', 'ivan', 'иван',
+                'yuri', 'юрий', 'pavel', 'павел', 'sergey', 'сергей',
+                'nikolai', 'николай', 'vladimir', 'владимир', 'boris', 'борис',
+                'maxim', 'максим', 'roman', 'роман', 'oleg', 'олег',
+                // English male names
+                'john', 'david', 'michael', 'james', 'robert', 'daniel', 'thomas',
+                // Other indicators
+                'male', 'm ', '(m)', '_m', '-m'
+            ];
+            
+            // Female indicators (to exclude)
+            const femaleKeywords = [
+                'female', 'женский', 'woman', 'femme',
+                'alena', 'алена', 'marina', 'марина', 'jane', 'оксана', 'oksana',
+                'dasha', 'даша', 'julia', 'юлия', 'lera', 'лера', 'masha', 'маша',
+                'f ', '(f)', '_f', '-f'
+            ];
+            
+            // Check for female indicators first (exclusion)
+            if (femaleKeywords.some(keyword => maleName.includes(keyword))) {
+                return false;
+            }
+            
+            // Check for male indicators
+            return maleKeywords.some(keyword => maleName.includes(keyword));
+        }
+        
+        // Check if voice is high quality
+        function isHighQualityVoice(voice) {
+            const name = voice.name.toLowerCase();
+            return ['neural', 'premium', 'wavenet', 'natural', 'enhanced'].some(k => name.includes(k));
+        }
+        
+        // Find best male voice
+        function findBestMaleVoice() {
+            const voices = availableVoices;
+            
+            // Priority 1: Premium Russian male voices
+            let voice = voices.find(v => 
+                v.lang.toLowerCase().includes('ru') && 
+                isMaleVoice(v) && 
+                isHighQualityVoice(v)
+            );
+            
+            // Priority 2: Any Russian male voice
+            if (!voice) {
+                voice = voices.find(v => 
+                    v.lang.toLowerCase().includes('ru') && 
+                    isMaleVoice(v)
+                );
+            }
+            
+            // Priority 3: Premium English male voices
+            if (!voice) {
+                voice = voices.find(v => 
+                    v.lang.toLowerCase().startsWith('en') && 
+                    isMaleVoice(v) && 
+                    isHighQualityVoice(v)
+                );
+            }
+            
+            // Priority 4: Any English male voice
+            if (!voice) {
+                voice = voices.find(v => 
+                    v.lang.toLowerCase().startsWith('en') && 
+                    isMaleVoice(v)
+                );
+            }
+            
+            return voice;
+        }
+        
+        // Voice info logging (no visual indicator)
+        function showVoiceInfo() {
+            // Log to console only, no visual indicator displayed
+            let voiceInfo = '';
+            if (useResponsiveVoice) {
+                voiceInfo = '🎙️ ResponsiveVoice: Russian Male';
+            } else if (selectedVoice) {
+                const quality = isHighQualityVoice(selectedVoice) ? '⭐' : '🔊';
+                voiceInfo = `${quality} ${selectedVoice.name}`;
+            }
+            console.log('Voice Active:', voiceInfo);
+        }
+        
+        // Text pre-processing for better speech flow
+        function prepareTextForSpeech(text) {
+            let processed = text;
+            
+            // Replace em-dashes with commas for natural pauses
+            processed = processed.replace(/\s*—\s*/g, ', ');
+            
+            // Replace multiple spaces with single space
+            processed = processed.replace(/\s+/g, ' ');
+            
+            // Ensure proper spacing after punctuation
+            processed = processed.replace(/([.!?:;,])\s*/g, '$1 ');
+            
+            // Trim
+            processed = processed.trim();
+            
+            return processed;
+        }
+
+        // Dual speech synthesis function
+        function speakTextNaturally(text, buttonElement) {
+            // Stop any ongoing speech
+            if (typeof responsiveVoice !== 'undefined') {
+                responsiveVoice.cancel();
+            }
+            speechSynthesis.cancel();
+            
+            // Update button state
+            if (buttonElement) {
+                buttonElement.textContent = 'Остановить ⏸';
+                buttonElement.classList.add('speaking');
+            }
+            
+            const processedText = prepareTextForSpeech(text);
+            
+            // Use ResponsiveVoice if selected
+            if (useResponsiveVoice && typeof responsiveVoice !== 'undefined') {
+                responsiveVoice.speak(processedText, "Russian Male", {
+                    rate: 0.85,
+                    pitch: 1.0,
+                    volume: 1.0,
+                    onend: function() {
+                        if (buttonElement) {
+                            buttonElement.textContent = '🔊';
+                            buttonElement.classList.remove('speaking');
+                        }
+                    },
+                    onerror: function(error) {
+                        console.error('ResponsiveVoice error:', error);
+                        if (buttonElement) {
+                            buttonElement.textContent = '🔊';
+                            buttonElement.classList.remove('speaking');
+                        }
+                    }
+                });
+            } 
+            // Use browser Speech Synthesis
+            else if ('speechSynthesis' in window && selectedVoice) {
+                const utterance = new SpeechSynthesisUtterance(processedText);
+                utterance.voice = selectedVoice;
+                utterance.lang = selectedVoice.lang;
+                utterance.rate = 0.85;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                utterance.onend = () => {
+                    if (buttonElement) {
+                        buttonElement.textContent = '🔊';
+                        buttonElement.classList.remove('speaking');
+                    }
+                };
+                
+                utterance.onerror = (event) => {
+                    console.error('Speech synthesis error:', event);
+                    if (buttonElement) {
+                        buttonElement.textContent = '🔊';
+                        buttonElement.classList.remove('speaking');
+                    }
+                };
+                
+                console.log('🗣️ Speaking with:', selectedVoice.name);
+                speechSynthesis.speak(utterance);
+            } 
+            // Fallback error
+            else {
+                alert('Синтез речи недоступен в вашем браузере');
+                if (buttonElement) {
+                    buttonElement.textContent = 'Озвучить 🔊';
+                    buttonElement.classList.remove('speaking');
+                }
+            }
+        }
+
+
+
+        function speakText(section) {
+            if (!('speechSynthesis' in window) && typeof responsiveVoice === 'undefined') {
+                alert('Синтез речи недоступен в вашем браузере');
+                return;
+            }
+
+            playClickSound();
+            
+            const button = event.target;
+            
+            // Check if speaking
+            const isSpeaking = (typeof responsiveVoice !== 'undefined' && responsiveVoice.isPlaying()) ||
+                               speechSynthesis.speaking;
+            
+            if (isSpeaking) {
+                // Stop speech
+                if (typeof responsiveVoice !== 'undefined') {
+                    responsiveVoice.cancel();
+                }
+                speechSynthesis.cancel();
+                button.textContent = '🔊';
+                button.classList.remove('speaking');
+                return;
+            }
+
+            const textToSpeak = currentReading.texts[section];
+            if (!textToSpeak) {
+                console.log('Текст для озвучивания не найден');
+                return;
+            }
+
+            // Clean text from HTML tags
+            const cleanText = textToSpeak.replace(/<[^>]*>/g, '');
+            
+            // Use the new natural speech function
+            speakTextNaturally(cleanText, button);
+        }
+
+
+
+        function openModal(imageSrc, altText) {
+            const modal = document.getElementById('cardModal');
+            const modalImage = document.getElementById('modalImage');
+            
+            modalImage.src = imageSrc;
+            modalImage.alt = altText;
+            modal.style.display = 'block';
+            
+            // Close modal when clicking outside the image
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            };
+        }
+
+        function closeModal() {
+            document.getElementById('cardModal').style.display = 'none';
+        }
+
+        // Initialize voices with male detection
+        function initializeVoices() {
+            console.log('🎙️ Инициализация системы мужского голоса...');
+            
+            // Initialize voices
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+            
+            // Try loading immediately
+            setTimeout(loadVoices, 100);
+            
+            // Also try after a longer delay
+            setTimeout(loadVoices, 1000);
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', initializeVoices);
+        document.addEventListener('DOMContentLoaded', initializeVoices);
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // PWA Install Button Logic
+        function checkInstallButton() {
+            const installBtn = document.getElementById('installButton');
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            const currentPageId = document.querySelector('.page.active')?.id;
+            
+            if (currentPageId === 'page1' && !appInstalled && !isStandalone) {
+                installBtn.style.display = 'flex';
+            } else {
+                installBtn.style.display = 'none';
+            }
+        }
+
+        // Action button functions
+        function repeatReading() {
+            playClickSound();
+            // Reset state and return to page 1
+            document.getElementById('page3').classList.remove('active');
+            document.getElementById('page2').classList.remove('active');
+            document.getElementById('page1').classList.add('active');
+            
+            // Reset content
+            document.getElementById('cardsSection').style.display = 'none';
+            document.getElementById('readingSection').style.display = 'none';
+            document.getElementById('startContent').classList.remove('fade-out');
+            
+            // Reset animations
+            const flash = document.getElementById('goldenFlash');
+            flash.style.animation = 'none';
+            
+            // Remove any enlarged card state
+            document.querySelectorAll('.card-cell.enlarged').forEach(c => {
+                c.classList.remove('enlarged');
+            });
+            document.body.classList.remove('card-enlarged');
+            enlargedCard = null;
+            
+            // Update exit button visibility
+            updateExitButton();
+            
+            // Check install button visibility
+            checkInstallButton();
+            
+            // Stop any speech
+            if (typeof responsiveVoice !== 'undefined') {
+                responsiveVoice.cancel();
+            }
+            speechSynthesis.cancel();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openTelegram() {
+            playClickSound();
+            window.open('https://t.me/Astral_Hero_Community', '_blank', 'noopener,noreferrer');
+        }
+
+        // 🔍 PWA DEBUG INFO
+        console.log('🔍 PWA Debug Info:');
+        console.log('- URL:', window.location.href);
+        console.log('- Service Worker supported:', 'serviceWorker' in navigator);
+        console.log('- beforeinstallprompt supported:', 'onbeforeinstallprompt' in window);
+        console.log('- iOS:', /iPad|iPhone|iPod/.test(navigator.userAgent));
+        console.log('- Android:', /Android/.test(navigator.userAgent));
+
+        // PWA Install functionality - SIMPLIFIED
+        let deferredPrompt = null;
+        const installButton = document.getElementById('installButton');
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('💡 beforeinstallprompt event fired');
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        // Handle install button click with SIMPLIFIED LOGIC
+        if (installButton) {
+            installButton.addEventListener('click', async () => {
+                console.log('🖱️ Install button clicked');
+                
+                if (deferredPrompt) {
+                    // Native prompt available
+                    deferredPrompt.prompt();
+                    const result = await deferredPrompt.userChoice;
+                    console.log('Install result:', result.outcome);
+                    deferredPrompt = null;
+                } else {
+                    // Show manual installation instructions
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    const isAndroid = /Android/.test(navigator.userAgent);
+                    
+                    let message = '';
+                    if (isIOS) {
+                        message = 'Для установки на iPhone/iPad:\n\n1. Нажмите кнопку "Поделиться" 📤\n2. Выберите "На экран Домой"';
+                    } else if (isAndroid) {
+                        message = 'Для установки на Android:\n\n1. Нажмите меню браузера (⋮)\n2. Выберите "Добавить на главный экран"';
+                    } else {
+                        message = 'Для установки приложения:\n\n1. Откройте меню браузера\n2. Выберите "Установить приложение"';
+                    }
+                    
+                    alert(message);
+                }
+                
+                // Hide button permanently
+                installButton.style.display = 'none';
+                appInstalled = true;
+            });
+        }
+
+        // Listen for app installed event
+        window.addEventListener('appinstalled', () => {
+            console.log('🎉 PWA was installed');
+            installButton.style.display = 'none';
+            appInstalled = true;
+        });
+
+        // Initialize exit button and install button on page load
+        setTimeout(() => {
+            updateExitButton();
+            checkInstallButton();
+        }, 1000);
+        
+        // Ensure exit button is visible on page load (page 1)
+        window.addEventListener('load', () => {
+            updateExitButton();
+        });
+    </script>
+</body>
+</html>
